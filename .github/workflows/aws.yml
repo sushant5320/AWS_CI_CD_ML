@@ -76,33 +76,33 @@ jobs:
         # be deployed to ECS.
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        
+
     - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ github.sha }}
-          AWS_REGION: ${{ vars.AWS_REGION }}
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          envs: ECR_REGISTRY,ECR_REPOSITORY,IMAGE_TAG,AWS_REGION
-          script: |
-            # 1. Authenticate Docker on the EC2 instance to ECR
-            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      uses: appleboy/ssh-action@master
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+        IMAGE_TAG: ${{ github.sha }}
+        AWS_REGION: ${{ vars.AWS_REGION }}
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        envs: ECR_REGISTRY,ECR_REPOSITORY,IMAGE_TAG,AWS_REGION
+        script: |
+          # 1. Authenticate Docker on the EC2 instance to ECR
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
             
-            # 2. Stop and remove the old running container
-            docker stop my-ml-app || true
-            docker rm my-ml-app || true
+          # 2. Stop and remove the old running container
+          docker stop my-ml-app || true
+          docker rm my-ml-app || true
             
-            # 3. Pull the fresh image from ECR
-            docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # 3. Pull the fresh image from ECR
+          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
             
-            # 4. Run the new container (Mapping port 80 on EC2 to your ML app's port)
-            docker run -d --name my-ml-app -p 80:8000 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # 4. Run the new container (Mapping port 80 on EC2 to your ML app's port)
+          docker run -d --name my-ml-app -p 80:8000 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
             
-            # 5. Clean up old unused images to save EC2 disk space
-            docker image prune -a -f
+          # 5. Clean up old unused images to save EC2 disk space
+          docker image prune -a -f
 
