@@ -94,7 +94,7 @@ jobs:
 
       - name: Stop and remove container if running
         run: |
-          docker ps -q --filter "name=$IMAGE_TAG" | grep -q . && docker stop $IMAGE_TAG && docker rm -fv $IMAGE_TAG
+          docker rm -f $IMAGE_TAG || true
 
       - name: Run Docker Image to serve users
         run: |
