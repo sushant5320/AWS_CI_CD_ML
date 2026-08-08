@@ -33,8 +33,9 @@ def predict():
         # Make predictions
         predict_pipeline = PredictPipeline()
         prediction = predict_pipeline.predict(input_df)
-
-        return render_template('home.html', prediction=prediction[0])
+        pred=prediction[0]
+        
+        return render_template('home.html', prediction=f"{pred:.2f}")
    
 
 
